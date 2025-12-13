@@ -609,10 +609,23 @@
         }
 
         // Initialize on page load
-        window.onload = function() {
-            initializeForms();
-            console.log('Static timetable generator loaded');
+        window.onload = function () {
+    initializeForms();
+
+    const img = new Image();
+    img.onload = function () {
+            baseImage = img;
+            document.getElementById('imageStatus').textContent =
+                `✓ Image loaded: ${img.width}x${img.height}`;
+            updateTimetable();
         };
+
+        img.onerror = function () {
+            console.error("Failed to load timetable_exact.png");
+        };
+
+        img.src = "timetable_exact.png"; // must exist in same folder
+    };
     </script>
 </body>
 </html>
