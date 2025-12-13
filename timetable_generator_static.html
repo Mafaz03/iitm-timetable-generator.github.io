@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IITM M.Tech. / M.Sc. / M.S. / Ph.D. Timetable Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .form-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .font-size-value {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .slot-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-right: 8px;
+        }
+
+        .timetable-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .timetable-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        #timetableCanvas {
+            width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #c3e6cb;
+            display: none;
+        }
+
+        .success.active {
+            display: block;
+        }
+
+        .options-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .options-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-weight: normal;
+            color: #856404;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .form-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .form-section::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .form-section::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 IITM M.Tech. / M.Sc. / M.S. / Ph.D. Timetable Generator</h1>
+            <p>Create your personalized academic schedule - 100% Client-Side (No Server Required)</p>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <div class="instructions">
+                    <h3>📝 Instructions</h3>
+                    <ul>
+                        <li>Upload base timetable image first (PNG/JPG)</li>
+                        <li>Enter your class details in the input fields</li>
+                        <li>Adjust font size for better readability</li>
+                        <li>Enable "Make empty slots white" to hide unused slots</li>
+                        <li>Click "Update Timetable" to generate</li>
+                        <li>Download your personalized timetable</li>
+                    </ul>
+                </div>
+
+                <div class="options-section">
+                    <h3>📤 Upload Base Image</h3>
+                    <div class="button-group" style="margin-top: 0; margin-bottom: 15px;">
+                        <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                            Choose Base Timetable Image
+                        </button>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)">
+                    <div id="imageStatus" style="color: #856404; font-weight: bold;"></div>
+                </div>
+
+                <div class="options-section">
+                    <h3>⚙️ Display Options</h3>
+                    <div>
+                        <label>
+                            Font Size: <span class="font-size-value" id="fontSizeValue">40</span>px
+                        </label>
+                        <input type="range" id="fontSize" min="32" max="70" value="40" 
+                               oninput="document.getElementById('fontSizeValue').textContent = this.value">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="blankToWhite">
+                        <label for="blankToWhite">⬜ Make empty slots white (text remains black)</label>
+                    </div>
+                </div>
+
+                <h2>Class Selection</h2>
+
+                <div id="slotForms"></div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="updateTimetable()" id="updateBtn">
+                        Update Timetable
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetForm()">
+                        Reset All
+                    </button>
+                </div>
+            </div>
+
+            <div class="timetable-section">
+                <h2>Your Timetable</h2>
+
+                <div class="success" id="successMsg">✅ Timetable updated successfully!</div>
+
+                <div class="loading" id="loading">
+                    Generating your timetable...
+                </div>
+
+                <canvas id="timetableCanvas"></canvas>
+
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="downloadTimetable()" id="downloadBtn">
+                        📥 Download Timetable
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Slot data with colors and dimensions
+        const SLOT_DATA = {
+            "A": {"facecolor": [197, 212, 161], "dimensions": [[205, 130, 336, 245], [1700, 385, 400, 237], [1295, 880, 395, 245], [886, 1130, 401, 242]]},
+            "B": {"facecolor": [125, 101, 158], "dimensions": [[546, 132, 337, 244], [204, 381, 338, 241], [1699, 631, 402, 245], [1293, 1129, 402, 246]]},
+            "C": {"facecolor": [108, 170, 195], "dimensions": [[887, 132, 400, 241], [547, 381, 336, 242], [205, 631, 338, 245], [1699, 1128, 402, 247]]},
+            "D": {"facecolor": [224, 153, 85], "dimensions": [[1293, 133, 402, 241], [887, 382, 402, 245], [549, 631, 330, 243], [1698, 880, 403, 245]]},
+            "G": {"facecolor": [146, 138, 91], "dimensions": [[1698, 132, 403, 245], [3185, 630, 402, 246], [886, 880, 403, 245], [546, 1129, 337, 246]]},
+            "E": {"facecolor": [179, 87, 81], "dimensions": [[1292, 381, 403, 245], [886, 630, 403, 244], [205, 879, 338, 246], [3189, 1129, 400, 245]]},
+            "F": {"facecolor": [250, 243, 93], "dimensions": [[3185, 381, 403, 246], [1292, 630, 403, 246], [547, 879, 336, 246], [204, 1129, 339, 246]]},
+            "P": {"facecolor": [254, 249, 233], "dimensions": [[2374, 131, 808, 121]]},
+            "Q": {"facecolor": [254, 249, 233], "dimensions": [[2374, 381, 807, 121]]},
+            "R": {"facecolor": [254, 249, 233], "dimensions": [[2375, 630, 806, 121]]},
+            "S": {"facecolor": [254, 249, 233], "dimensions": [[2375, 880, 806, 121]]},
+            "T": {"facecolor": [254, 249, 233], "dimensions": [[2375, 1129, 806, 121]]},
+            "H/H1": {"facecolor": [116, 175, 94], "dimensions": [[2374, 256, 403, 121]]},
+            "H/H2": {"facecolor": [116, 175, 94], "dimensions": [[2781, 507, 400, 120]]},
+            "H/H3": {"facecolor": [116, 175, 94], "dimensions": [[3185, 880, 401, 242]]},
+            "M/M2": {"facecolor": [190, 220, 230], "dimensions": [[2781, 257, 400, 120]]},
+            "M/M1": {"facecolor": [190, 220, 230], "dimensions": [[2374, 506, 403, 121]]},
+            "J/J3": {"facecolor": [240, 213, 184], "dimensions": [[3186, 134, 398, 239]]},
+            "J/J1": {"facecolor": [240, 213, 184], "dimensions": [[2376, 756, 398, 116]]},
+            "J/J2": {"facecolor": [240, 213, 184], "dimensions": [[2783, 1006, 394, 115]]},
+            "L/L1": {"facecolor": [91, 40, 37], "dimensions": [[2375, 1005, 401, 120]]},
+            "L/L2": {"facecolor": [91, 40, 37], "dimensions": [[2782, 1255, 402, 117]]},
+            "K/K2": {"facecolor": [8, 32, 91], "dimensions": [[2780, 756, 400, 118]]},
+            "K/K1": {"facecolor": [8, 32, 91], "dimensions": [[2375, 1255, 402, 117]]}
+        };
+
+        const ALL_SLOTS = ["A", "B", "C", "D", "E", "F", "G", "P", "Q", "R", "S", "T",
+                          "H/H1", "H/H2", "H/H3", "M/M1", "M/M2", 
+                          "J/J1", "J/J2", "J/J3", "K/K1", "K/K2", "L/L1", "L/L2"];
+
+        let baseImage = null;
+        let currentClasses = {};
+
+        // Generate form inputs
+        function initializeForms() {
+            const container = document.getElementById('slotForms');
+            ALL_SLOTS.forEach(slot => {
+                const slotId = slot.replace('/', '_');
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                formGroup.innerHTML = `
+                    <label><span class="slot-badge">${slot}</span> Class Details:</label>
+                    <input type="text" 
+                           id="input_${slotId}" 
+                           placeholder="Enter class details (e.g., DL: CRC103)"
+                           data-slot="${slot}">
+                `;
+                container.appendChild(formGroup);
+            });
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        baseImage = img;
+                        document.getElementById('imageStatus').textContent = `✓ Image loaded: ${img.width}x${img.height}`;
+                        updateTimetable();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function collectClasses() {
+            const classes = {};
+            ALL_SLOTS.forEach(slot => {
+                const slotId = slot.replace('/', '_');
+                const input = document.getElementById(`input_${slotId}`);
+                if (input && input.value.trim()) {
+                    classes[slot] = input.value.trim();
+                }
+            });
+            return classes;
+        }
+
+        function updateTimetable() {
+            if (!baseImage) {
+                alert('Please upload a base timetable image first!');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const successMsg = document.getElementById('successMsg');
+
+            loading.classList.add('active');
+            successMsg.classList.remove('active');
+
+            setTimeout(() => {
+                const classes = collectClasses();
+                const fontSize = parseInt(document.getElementById('fontSize').value);
+                const blankToWhite = document.getElementById('blankToWhite').checked;
+
+                drawTimetable(classes, fontSize, blankToWhite);
+
+                loading.classList.remove('active');
+                successMsg.classList.add('active');
+                setTimeout(() => successMsg.classList.remove('active'), 3000);
+            }, 100);
+        }
+
+        function drawTimetable(userClasses, fontSize, blankToWhite) {
+            const canvas = document.getElementById('timetableCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size to match base image
+            canvas.width = baseImage.width;
+            canvas.height = baseImage.height;
+
+            // Draw base image
+            ctx.drawImage(baseImage, 0, 0);
+
+            // Set font
+            ctx.font = `bold ${fontSize}px Arial, Helvetica, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Draw slots
+            Object.keys(SLOT_DATA).forEach(slot => {
+                const slotInfo = SLOT_DATA[slot];
+                const classInfo = userClasses[slot] || '';
+                let facecolor = slotInfo.facecolor;
+
+                // Apply blank to white logic
+                if (!classInfo && blankToWhite) {
+                    facecolor = [255, 255, 255];
+                }
+
+                slotInfo.dimensions.forEach(dims => {
+                    const [x, y, w, h] = dims;
+
+                    // Draw colored rectangle
+                    ctx.fillStyle = `rgb(${facecolor[0]}, ${facecolor[1]}, ${facecolor[2]})`;
+                    ctx.fillRect(x, y, w, h);
+
+                    // Prepare text
+                    ctx.fillStyle = 'black';
+                    const lines = [slot];
+
+                    if (classInfo) {
+                        // Split long text
+                        const maxChars = 18;
+                        if (classInfo.length > maxChars) {
+                            const words = classInfo.split(' ');
+                            let currentLine = '';
+                            words.forEach(word => {
+                                const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                                if (testLine.length <= maxChars) {
+                                    currentLine = testLine;
+                                } else {
+                                    if (currentLine) lines.push(currentLine);
+                                    currentLine = word;
+                                }
+                            });
+                            if (currentLine) lines.push(currentLine);
+                        } else {
+                            lines.push(classInfo);
+                        }
+                    }
+
+                    // Draw text
+                    const lineHeight = fontSize + 10;
+                    const totalHeight = lines.length * lineHeight;
+                    const startY = y + h / 2 - totalHeight / 2;
+
+                    lines.forEach((line, i) => {
+                        if (i === 0) {
+                            ctx.font = `bold ${fontSize + 4}px Arial, Helvetica, sans-serif`;
+                        } else {
+                            ctx.font = `${fontSize}px Arial, Helvetica, sans-serif`;
+                        }
+                        ctx.fillText(line, x + w / 2, startY + i * lineHeight + lineHeight / 2);
+                    });
+                });
+            });
+        }
+
+        function downloadTimetable() {
+            const canvas = document.getElementById('timetableCanvas');
+            const link = document.createElement('a');
+            link.download = 'timetable_exact.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            const successMsg = document.getElementById('successMsg');
+            successMsg.textContent = '✅ Timetable downloaded successfully!';
+            successMsg.classList.add('active');
+            setTimeout(() => {
+                successMsg.classList.remove('active');
+                successMsg.textContent = '✅ Timetable updated successfully!';
+            }, 3000);
+        }
+
+        function resetForm() {
+            ALL_SLOTS.forEach(slot => {
+                const slotId = slot.replace('/', '_');
+                const input = document.getElementById(`input_${slotId}`);
+                if (input) input.value = '';
+            });
+            document.getElementById('fontSize').value = 40;
+            document.getElementById('fontSizeValue').textContent = '40';
+            document.getElementById('blankToWhite').checked = false;
+            updateTimetable();
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            initializeForms();
+            console.log('Static timetable generator loaded');
+        };
+    </script>
+</body>
+</html>
