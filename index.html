@@ -253,6 +253,20 @@
             display: block;
         }
 
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #f5c6cb;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
         .options-section {
             background: #fff3cd;
             padding: 15px;
@@ -286,6 +300,16 @@
             margin: 0;
         }
 
+        .status-section {
+            background: #d1ecf1;
+            padding: 10px 15px;
+            border-left: 4px solid #17a2b8;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #0c5460;
+        }
+
         @media (max-width: 1200px) {
             .content {
                 grid-template-columns: 1fr;
@@ -309,17 +333,13 @@
         .form-section::-webkit-scrollbar-thumb:hover {
             background: #764ba2;
         }
-
-        #fileInput {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📚 IITM M.Tech. / M.Sc. / M.S. / Ph.D. Timetable Generator</h1>
-            <p>Create your personalized academic schedule - 100% Client-Side (No Server Required)</p>
+            <p>Create your personalized academic schedule</p>
         </div>
 
         <div class="content">
@@ -327,13 +347,17 @@
                 <div class="instructions">
                     <h3>📝 Instructions</h3>
                     <ul>
-                        <li>Upload base timetable image first (PNG/JPG)</li>
+                        <li>Base timetable loaded automatically from directory</li>
                         <li>Enter your class details in the input fields</li>
                         <li>Adjust font size for better readability</li>
                         <li>Enable "Make empty slots white" to hide unused slots</li>
                         <li>Click "Update Timetable" to generate</li>
                         <li>Download your personalized timetable</li>
                     </ul>
+                </div>
+
+                <div class="status-section" id="imageStatus">
+                    📊 Loading base images...
                 </div>
 
                 <div class="options-section">
@@ -368,6 +392,7 @@
             <div class="timetable-section">
                 <h2>Your Timetable</h2>
 
+                <div class="error" id="errorMsg"></div>
                 <div class="success" id="successMsg">✅ Timetable updated successfully!</div>
 
                 <div class="loading" id="loading">
@@ -419,6 +444,7 @@
                           "J/J1", "J/J2", "J/J3", "K/K1", "K/K2", "L/L1", "L/L2"];
 
         let baseImage = null;
+        let overlayImage = null;
         let currentClasses = {};
 
         // Generate form inputs
@@ -439,23 +465,6 @@
             });
         }
 
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        baseImage = img;
-                        document.getElementById('imageStatus').textContent = `✓ Image loaded: ${img.width}x${img.height}`;
-                        updateTimetable();
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
         function collectClasses() {
             const classes = {};
             ALL_SLOTS.forEach(slot => {
@@ -470,15 +479,20 @@
 
         function updateTimetable() {
             if (!baseImage) {
-                alert('Please upload a base timetable image first!');
+                const errorMsg = document.getElementById('errorMsg');
+                errorMsg.textContent = '⚠️ Base image not loaded yet. Please wait...';
+                errorMsg.classList.add('active');
+                setTimeout(() => errorMsg.classList.remove('active'), 3000);
                 return;
             }
 
             const loading = document.getElementById('loading');
             const successMsg = document.getElementById('successMsg');
+            const errorMsg = document.getElementById('errorMsg');
 
             loading.classList.add('active');
             successMsg.classList.remove('active');
+            errorMsg.classList.remove('active');
 
             setTimeout(() => {
                 const classes = collectClasses();
@@ -501,7 +515,7 @@
             canvas.width = baseImage.width;
             canvas.height = baseImage.height;
 
-            // Draw base image
+            // Draw base image first
             ctx.drawImage(baseImage, 0, 0);
 
             // Set font
@@ -567,12 +581,17 @@
                     });
                 });
             });
+
+            // Draw overlay image last (if it exists)
+            if (overlayImage) {
+                ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+            }
         }
 
         function downloadTimetable() {
             const canvas = document.getElementById('timetableCanvas');
             const link = document.createElement('a');
-            link.download = 'timetable_exact.png';
+            link.download = 'my_timetable.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
 
@@ -594,27 +613,47 @@
             document.getElementById('fontSize').value = 40;
             document.getElementById('fontSizeValue').textContent = '40';
             document.getElementById('blankToWhite').checked = false;
-            updateTimetable();
+            if (baseImage) {
+                updateTimetable();
+            }
         }
 
         // Initialize on page load
-        window.onload = function () {
-    initializeForms();
+        window.onload = function() {
+            console.log('Initializing IITM Timetable Generator...');
+            initializeForms();
 
-    const img = new Image();
-    img.onload = function () {
-            baseImage = img;
-            document.getElementById('imageStatus').textContent =
-                `✓ Image loaded: ${img.width}x${img.height}`;
-            updateTimetable();
+            // Load base image from directory
+            const img = new Image();
+            img.onload = function() {
+                baseImage = img;
+                document.getElementById('imageStatus').textContent = 
+                    `✅ Base image loaded: ${img.width} × ${img.height}px`;
+                console.log('Base image loaded successfully');
+                updateTimetable();
+            };
+            img.onerror = function() {
+                document.getElementById('imageStatus').textContent = 
+                    '❌ Error: timetable_exact.png not found in directory!';
+                document.getElementById('imageStatus').style.background = '#f8d7da';
+                document.getElementById('imageStatus').style.borderLeftColor = '#f5c6cb';
+                document.getElementById('imageStatus').style.color = '#721c24';
+                console.error('Failed to load base image');
+            };
+            img.src = 'timetable_exact.png';
+
+            // Load overlay image (optional)
+            const overlay = new Image();
+            overlay.onload = function() {
+                overlayImage = overlay;
+                console.log('Overlay image loaded successfully');
+                if (baseImage) updateTimetable();
+            };
+            overlay.onerror = function() {
+                console.log('No overlay image found (optional)');
+            };
+            overlay.src = 'timetable_exact_overlay.png';
         };
-
-        img.onerror = function () {
-            console.error("Failed to load timetable_exact.png");
-        };
-
-        img.src = "timetable_exact.png"; // must exist in same folder
-    };
     </script>
 </body>
 </html>
