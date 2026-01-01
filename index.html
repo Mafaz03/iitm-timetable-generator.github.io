@@ -338,14 +338,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📚 IITM M.Tech. / M.Sc. / M.S. / Ph.D. Timetable Generator</h1>
+            <h1>IITM M.Tech. / M.Sc. / M.S. / Ph.D. Timetable Generator by <a href="https://github.com/Mafaz03" target="_blank">Mafaz03</a></h1>
             <p>Create your personalized academic schedule</p>
         </div>
 
         <div class="content">
             <div class="form-section">
                 <div class="instructions">
-                    <h3>📝 Instructions</h3>
+                    <h3>Instructions</h3>
                     <ul>
                         <li>Base timetable loaded automatically from directory</li>
                         <li>Enter your class details in the input fields</li>
@@ -357,11 +357,11 @@
                 </div>
 
                 <div class="status-section" id="imageStatus">
-                    📊 Loading base images...
+                    Loading base images...
                 </div>
 
                 <div class="options-section">
-                    <h3>⚙️ Display Options</h3>
+                    <h3>Display Options</h3>
                     <div>
                         <label>
                             Font Size: <span class="font-size-value" id="fontSizeValue">40</span>px
@@ -628,13 +628,13 @@
             img.onload = function() {
                 baseImage = img;
                 document.getElementById('imageStatus').textContent = 
-                    `✅ Base image loaded: ${img.width} × ${img.height}px`;
+                    `Base image loaded: ${img.width} × ${img.height}px`;
                 console.log('Base image loaded successfully');
                 updateTimetable();
             };
             img.onerror = function() {
                 document.getElementById('imageStatus').textContent = 
-                    '❌ Error: timetable_exact.png not found in directory!';
+                    'Error: timetable_exact.png not found in directory!';
                 document.getElementById('imageStatus').style.background = '#f8d7da';
                 document.getElementById('imageStatus').style.borderLeftColor = '#f5c6cb';
                 document.getElementById('imageStatus').style.color = '#721c24';
